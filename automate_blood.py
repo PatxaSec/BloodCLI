@@ -75,7 +75,7 @@ def is_old_os(entity):
     props = entity.get("Properties", {})
     os_name = props.get("operatingsystem", "")
     if os_name:
-        if any(ver in os_name.lower() for ver in ["xp", "vista", "2003", "2008"]):
+        if any(ver in os_name.lower() for ver in ["xp", "7", "vista", "2003", "2008"]):
             return True
     return False
 
@@ -137,7 +137,7 @@ def main():
     print("\n=== DETECTED ENTITIES ===")
     print(f"- Total entities: {len(sid_map)}")
 
-    print("\n=== 🔥 POTENTIALLY CRITICAL USERS ===")
+    print("\n=== POTENTIALLY CRITICAL USERS ===")
     print_entities("Kerberoastable accounts", kerberoastables)
     print_entities("AS-REP Roastable accounts", asrep_roastables)
     print_entities("AdminCount=true accounts", admins)
@@ -174,7 +174,7 @@ def main():
         found_level = next((lvl for lvl, perms in permission_levels.items() if right in perms), "low")
         levels[found_level].append(rel)
 
-    print("\n=== 🔐 DETECTED RELATIONSHIPS BY LEVEL ===")
+    print("\n=== DETECTED RELATIONSHIPS BY LEVEL ===")
     for level in ["critical", "high", "medium", "low"]:
         rels_level = levels[level]
         print(f"\n[+] Level: {level.upper()} ({len(rels_level)} relationships)")
