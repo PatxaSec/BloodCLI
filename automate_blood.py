@@ -1,3 +1,6 @@
+#!/usr/local/bin/python3
+# CREATOR: PatxaSec
+
 import json
 import zipfile
 import sys
