@@ -190,7 +190,6 @@ def main():
         dest_sid = rel.get("destino_sid", "")
 
         dest_entity = sid_map.get(dest_sid)
-        # Exclude relations whose destination is admincount=true
         if dest_entity and is_admin(dest_entity):
             continue
 
@@ -201,7 +200,6 @@ def main():
                 break
         if not found_level:
             found_level = "low"
-
         levels[found_level].append(rel)
 
     print("\n=== 🔐 DETECTED RELATIONSHIPS BY LEVEL ===")
@@ -209,8 +207,7 @@ def main():
         rels_level = levels[level]
         print(f"\n[+] Level: {level.upper()} ({len(rels_level)} relationships)")
         if rels_level:
-            limit = 10
-            for rel in rels_level[:limit]:
+            for rel in rels_level[:10]: # CHANGE ME FOR DIFERENT RELATIONSHIP LENGTH
                 origin = f"{rel['origen_nombre']} ({rel['origen_tipo']})"
                 dest_name = rel.get("destino_sid", "Unknown")
                 dest_entity = sid_map.get(rel.get("destino_sid", ""))
