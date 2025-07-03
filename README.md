@@ -22,7 +22,7 @@ This Python script parses a BloodHound JSON ZIP file and analyzes Active Directo
  
 > [!WARNING]  
 > RELATIONSHIPS ARE LIMITED TO 10.
-> GO TO LINE 210 IN ORDER TO CHANGE IT.
+> GO TO LINE 115 IN ORDER TO CHANGE IT.
 ---
 
 ## Usage
