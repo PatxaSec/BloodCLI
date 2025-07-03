@@ -112,59 +112,71 @@ def main():
 
     print("\n=== DETECTED ENTITIES ===")
     print(f"- Total entities: {len(sid_map)}")
-
+    limit = 10
     print("\n=== 🔥 POTENTIALLY CRITICAL USERS ===")
     print(f"- Kerberoastable accounts: {len(kerberoastables)}")
     if kerberoastables:
-        for u in kerberoastables:
+        for u in kerberoastables[:limit]:
             name = u.get("Properties", {}).get("name", "Unknown")
             tipo = u.get("_tipo", "Unknown")
             print(f"   • {name} ({tipo})")
+        if len(kerberoastables) > limit:
+            print(f"  ... ({len(kerberoastables) - limit} more relationships)")
     else:
         print("   (none)")
 
     print(f"- AS-REP Roastable accounts: {len(asrep_roastables)}")
     if asrep_roastables:
-        for u in asrep_roastables:
+        for u in asrep_roastables[:limit]:
             name = u.get("Properties", {}).get("name", "Unknown")
             tipo = u.get("_tipo", "Unknown")
             print(f"   • {name} ({tipo})")
+        if len(asrep_roastables) > limit:
+            print(f"  ... ({len(asrep_roastables) - limit} more relationships)")
     else:
         print("   (none)")
 
     print(f"- AdminCount=true accounts: {len(admins)}")
     if admins:
-        for u in admins:
+        for u in admins[:limit]:
             name = u.get("Properties", {}).get("name", "Unknown")
             tipo = u.get("_tipo", "Unknown")
             print(f"   • {name} ({tipo})")
+        if len(admins) > limit:
+            print(f"  ... ({len(admins) - limit} more relationships)")
     else:
         print("   (none)")
 
     print(f"- Computers with obsolete OS: {len(obsolete_computers)}")
     if obsolete_computers:
-        for c in obsolete_computers:
+        for c in obsolete_computers[:limit]:
             name = c.get("Properties", {}).get("name", "Unknown")
             tipo = c.get("_tipo", "Unknown")
             print(f"   • {name} ({tipo})")
+        if len(obsolete_computers) > limit:
+            print(f"  ... ({len(obsolete_computers) - limit} more relationships)")
     else:
         print("   (none)")
 
     print(f"- Disabled admins: {len(disabled_admins)}")
     if disabled_admins:
-        for u in disabled_admins:
+        for u in disabled_admins[:limit]:
             name = u.get("Properties", {}).get("name", "Unknown")
             tipo = u.get("_tipo", "Unknown")
             print(f"   • {name} ({tipo})")
+        if len(disabled_admins) > limit:
+            print(f"  ... ({len(disabled_admins) - limit} more relationships)")
     else:
         print("   (none)")
 
     print(f"- Users with passwords that never expire: {len(pwd_never_expire)}")
     if pwd_never_expire:
-        for u in pwd_never_expire:
+        for u in pwd_never_expire[:limit]:
             name = u.get("Properties", {}).get("name", "Unknown")
             tipo = u.get("_tipo", "Unknown")
             print(f"   • {name} ({tipo})")
+        if len(pwd_never_expire) > limit:
+            print(f"  ... ({len(pwd_never_expire) - limit} more relationships)")
     else:
         print("   (none)")
 
@@ -190,6 +202,7 @@ def main():
         dest_sid = rel.get("destino_sid", "")
 
         dest_entity = sid_map.get(dest_sid)
+        # Exclude relations whose destination is admincount=true
         if dest_entity and is_admin(dest_entity):
             continue
 
@@ -200,6 +213,7 @@ def main():
                 break
         if not found_level:
             found_level = "low"
+
         levels[found_level].append(rel)
 
     print("\n=== 🔐 DETECTED RELATIONSHIPS BY LEVEL ===")
@@ -207,8 +221,7 @@ def main():
         rels_level = levels[level]
         print(f"\n[+] Level: {level.upper()} ({len(rels_level)} relationships)")
         if rels_level:
-            limit = 10 # CHANGE ME FOR DIFERENT RELATIONSHIP LENGTH
-            for rel in rels_level[:limit]: 
+            for rel in rels_level[:limit]:
                 origin = f"{rel['origen_nombre']} ({rel['origen_tipo']})"
                 dest_name = rel.get("destino_sid", "Unknown")
                 dest_entity = sid_map.get(rel.get("destino_sid", ""))
