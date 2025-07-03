@@ -79,12 +79,23 @@ def is_old_os(entity):
             return True
     return False
 
+def get_display_items(items, limit):
+    if limit == ':':
+        return items
+    else:
+        try:
+            limit_int = int(limit)
+            return items[:limit_int]
+        except:
+            return items[:10]  # Default fallback
+
 def main():
     if len(sys.argv) < 2:
-        print(f"Usage: {os.path.basename(sys.argv[0])} <path_to_bloodhound_zip>")
+        print(f"Usage: {os.path.basename(sys.argv[0])} <path_to_bloodhound_zip> [limit]")
         sys.exit(1)
 
     zip_path = sys.argv[1]
+    limit = sys.argv[2] if len(sys.argv) > 2 else '10'
 
     print("[INFO] Reading data from ZIP...")
     sid_map, relaciones = parse_json(zip_path)
@@ -110,76 +121,31 @@ def main():
         if is_old_os(entity):
             obsolete_computers.append(entity)
 
+    def print_entities(title, entities):
+        print(f"- {title}: {len(entities)}")
+        if entities:
+            shown = get_display_items(entities, limit)
+            for u in shown:
+                name = u.get("Properties", {}).get("name", "Unknown")
+                tipo = u.get("_tipo", "Unknown")
+                print(f"   • {name} ({tipo})")
+            if limit != ':' and len(entities) > int(limit):
+                print(f"  ... ({len(entities) - int(limit)} more)")
+        else:
+            print("   (none)")
+
     print("\n=== DETECTED ENTITIES ===")
     print(f"- Total entities: {len(sid_map)}")
-    limit = 10
+
     print("\n=== 🔥 POTENTIALLY CRITICAL USERS ===")
-    print(f"- Kerberoastable accounts: {len(kerberoastables)}")
-    if kerberoastables:
-        for u in kerberoastables[:limit]:
-            name = u.get("Properties", {}).get("name", "Unknown")
-            tipo = u.get("_tipo", "Unknown")
-            print(f"   • {name} ({tipo})")
-        if len(kerberoastables) > limit:
-            print(f"  ... ({len(kerberoastables) - limit} more relationships)")
-    else:
-        print("   (none)")
+    print_entities("Kerberoastable accounts", kerberoastables)
+    print_entities("AS-REP Roastable accounts", asrep_roastables)
+    print_entities("AdminCount=true accounts", admins)
+    print_entities("Computers with obsolete OS", obsolete_computers)
+    print_entities("Disabled admins", disabled_admins)
+    print_entities("Users with passwords that never expire", pwd_never_expire)
 
-    print(f"- AS-REP Roastable accounts: {len(asrep_roastables)}")
-    if asrep_roastables:
-        for u in asrep_roastables[:limit]:
-            name = u.get("Properties", {}).get("name", "Unknown")
-            tipo = u.get("_tipo", "Unknown")
-            print(f"   • {name} ({tipo})")
-        if len(asrep_roastables) > limit:
-            print(f"  ... ({len(asrep_roastables) - limit} more relationships)")
-    else:
-        print("   (none)")
-
-    print(f"- AdminCount=true accounts: {len(admins)}")
-    if admins:
-        for u in admins[:limit]:
-            name = u.get("Properties", {}).get("name", "Unknown")
-            tipo = u.get("_tipo", "Unknown")
-            print(f"   • {name} ({tipo})")
-        if len(admins) > limit:
-            print(f"  ... ({len(admins) - limit} more relationships)")
-    else:
-        print("   (none)")
-
-    print(f"- Computers with obsolete OS: {len(obsolete_computers)}")
-    if obsolete_computers:
-        for c in obsolete_computers[:limit]:
-            name = c.get("Properties", {}).get("name", "Unknown")
-            tipo = c.get("_tipo", "Unknown")
-            print(f"   • {name} ({tipo})")
-        if len(obsolete_computers) > limit:
-            print(f"  ... ({len(obsolete_computers) - limit} more relationships)")
-    else:
-        print("   (none)")
-
-    print(f"- Disabled admins: {len(disabled_admins)}")
-    if disabled_admins:
-        for u in disabled_admins[:limit]:
-            name = u.get("Properties", {}).get("name", "Unknown")
-            tipo = u.get("_tipo", "Unknown")
-            print(f"   • {name} ({tipo})")
-        if len(disabled_admins) > limit:
-            print(f"  ... ({len(disabled_admins) - limit} more relationships)")
-    else:
-        print("   (none)")
-
-    print(f"- Users with passwords that never expire: {len(pwd_never_expire)}")
-    if pwd_never_expire:
-        for u in pwd_never_expire[:limit]:
-            name = u.get("Properties", {}).get("name", "Unknown")
-            tipo = u.get("_tipo", "Unknown")
-            print(f"   • {name} ({tipo})")
-        if len(pwd_never_expire) > limit:
-            print(f"  ... ({len(pwd_never_expire) - limit} more relationships)")
-    else:
-        print("   (none)")
-
+    # --- Relaciones ---
     levels = {
         "critical": [],
         "high": [],
@@ -202,18 +168,10 @@ def main():
         dest_sid = rel.get("destino_sid", "")
 
         dest_entity = sid_map.get(dest_sid)
-        # Exclude relations whose destination is admincount=true
         if dest_entity and is_admin(dest_entity):
             continue
 
-        found_level = None
-        for level, perms in permission_levels.items():
-            if right in perms:
-                found_level = level
-                break
-        if not found_level:
-            found_level = "low"
-
+        found_level = next((lvl for lvl, perms in permission_levels.items() if right in perms), "low")
         levels[found_level].append(rel)
 
     print("\n=== 🔐 DETECTED RELATIONSHIPS BY LEVEL ===")
@@ -221,7 +179,8 @@ def main():
         rels_level = levels[level]
         print(f"\n[+] Level: {level.upper()} ({len(rels_level)} relationships)")
         if rels_level:
-            for rel in rels_level[:limit]:
+            shown = get_display_items(rels_level, limit)
+            for rel in shown:
                 origin = f"{rel['origen_nombre']} ({rel['origen_tipo']})"
                 dest_name = rel.get("destino_sid", "Unknown")
                 dest_entity = sid_map.get(rel.get("destino_sid", ""))
@@ -232,8 +191,8 @@ def main():
                     dest_type = rel.get("destino_tipo", "Unknown")
                 dest = f"{dest_name} ({dest_type})"
                 print(f"  {dest} --[{rel['derecho']}]--> {origin}")
-            if len(rels_level) > limit:
-                print(f"  ... ({len(rels_level) - limit} more relationships)")
+            if limit != ':' and len(rels_level) > int(limit):
+                print(f"  ... ({len(rels_level) - int(limit)} more relationships)")
 
 if __name__ == "__main__":
     main()
