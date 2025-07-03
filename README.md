@@ -1,6 +1,6 @@
 # BloodHound JSON Analyzer
 
-This Python script parses a BloodHound JSON ZIP archive and analyzes Active Directory entities and their relationships to identify potential security risks.
+This Python script parses a BloodHound JSON ZIP file and analyzes Active Directory entities and their relationships to identify potential security risks.
 
 ---
 
@@ -19,16 +19,10 @@ This Python script parses a BloodHound JSON ZIP archive and analyzes Active Dire
   - High
   - Medium
   - Low
+ 
 > [!WARNING]  
 > RELATIONSHIPS ARE LIMITED TO 10.
 > GO TO LINE 210 IN ORDER TO CHANGE IT.
----
-
-## Requirements
-
-- Python 3.6+
-- No external dependencies beyond the Python standard library
-
 ---
 
 ## Usage
