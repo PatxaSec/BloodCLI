@@ -207,7 +207,8 @@ def main():
         rels_level = levels[level]
         print(f"\n[+] Level: {level.upper()} ({len(rels_level)} relationships)")
         if rels_level:
-            for rel in rels_level[:10]: # CHANGE ME FOR DIFERENT RELATIONSHIP LENGTH
+            limit = 10 # CHANGE ME FOR DIFERENT RELATIONSHIP LENGTH
+            for rel in rels_level[:limit]: 
                 origin = f"{rel['origen_nombre']} ({rel['origen_tipo']})"
                 dest_name = rel.get("destino_sid", "Unknown")
                 dest_entity = sid_map.get(rel.get("destino_sid", ""))
