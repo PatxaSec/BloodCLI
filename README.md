@@ -24,7 +24,7 @@ This Python script parses a BloodHound JSON ZIP file and analyzes Active Directo
 ## Usage
 
 ```bash
-python automate_blood.py <path_to_bloodhound_zip> [limit] [-f FILTER] [-a]
+python3 automate_blood.py <path_to_bloodhound_zip> [limit] [-f FILTER] [-a]
 ```
 
 ```bash
