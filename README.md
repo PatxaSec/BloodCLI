@@ -33,34 +33,35 @@ usage: automate_blood.py [-h] [-f FILTER_NAME] [-a] zip_path [limit]
 Process BloodHound ZIP files and analyze relationships.
 
 positional arguments:
-  zip_path              Path to the BloodHound ZIP file
-  limit                 Limit output number per category (default: all)
+  zip_path             Path to BloodHound ZIP file
+  limit                Limit number of displayed items per category (integer or ':')
 
 options:
-  -h, --help            show this help message and exit
-  -f, --filter FILTER_NAME
-                        Filter by user, computer, group, container, OU, domain or GPO name (case insensitive)
-  -a, --filter-admin    Exclude relationships where entity is admin.
+  -h, --help           show this help message and exit
+  -f, --filter FILTER  Filter string for users/computers/groups/containers/OUs/domains/GPOs/rights
+  -a, --filter-admin   Exclude relationships where entity is admin
 ```
 
 - limit can be any integer.
 
 - WITH DEFAULT Full data
 
-![imagen](https://github.com/user-attachments/assets/c9c67301-24b4-4b12-a4e7-45cd244e58a4)
+![imagen](https://github.com/user-attachments/assets/6459384a-dd84-4f7b-b657-91fdc9812fa9)
 
 - With 5 relationships
 
-![imagen](https://github.com/user-attachments/assets/9212cea0-3e4f-4bd4-a7dd-772df61b9ebf)
+![imagen](https://github.com/user-attachments/assets/c0191212-cdc6-4702-b152-bd87e90ef049)
 
 - Excluding relationships where the entity is an admin.
 
-![imagen](https://github.com/user-attachments/assets/d11f9c6b-1736-4c18-8ba3-33a42bf7c7b7)
+![imagen](https://github.com/user-attachments/assets/c688d5b9-4eb2-457f-b8d6-fd9b50237227)
 
 - Filtering
 
-![imagen](https://github.com/user-attachments/assets/315f7877-f934-4b4e-8c28-c9ab8bea6f8c)
-![imagen](https://github.com/user-attachments/assets/31c86d20-7b16-4628-b326-acf57209f083)
+![imagen](https://github.com/user-attachments/assets/adabcbb5-64d1-4c65-821c-a880544bf253)
+
+![imagen](https://github.com/user-attachments/assets/6be8701f-4d5a-4584-b20a-07c15aed8a45)
+
 
 
 
