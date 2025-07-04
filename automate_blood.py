@@ -5,6 +5,7 @@ import json
 import zipfile
 import sys
 import os
+import argparse
 
 def parse_json(zip_path):
     sid_map = {}
@@ -74,7 +75,7 @@ def pwd_never_expires(entity):
 def is_old_os(entity):
     props = entity.get("Properties", {})
     os_name = props.get("operatingsystem")
-    
+
     if not os_name:
         return False
 
@@ -95,16 +96,43 @@ def get_display_items(items, limit):
     else:
         return items[:int(limit)]
 
-def main():
-    if len(sys.argv) < 2:
-        print(f"Usage: {os.path.basename(sys.argv[0])} <path_to_bloodhound_zip> [limit]")
-        sys.exit(1)
+def name_matches_filter(entity_name, entity_type, filter_name):
+    if not filter_name:
+        return True
+    if not entity_name and not entity_type:
+        return False
 
-    zip_path = sys.argv[1]
-    limit = sys.argv[2] if len(sys.argv) > 2 else ':'
+    filter_lower = filter_name.lower()
+
+    # Check if filter is substring of the name
+    if entity_name and filter_lower in entity_name.lower():
+        return True
+
+    # Check if filter matches types like container, ou, domain, gpo (case insensitive)
+    if entity_type:
+        entity_type_lower = entity_type.lower()
+        if filter_lower in entity_type_lower:
+            return True
+
+    return False
+
+def main():
+    parser = argparse.ArgumentParser(description="Process BloodHound ZIP files and analyze relationships.")
+    parser.add_argument("zip_path", help="Path to the BloodHound ZIP file")
+    parser.add_argument("limit", nargs='?', default=':', help="Limit output number per category (default: all)")
+    parser.add_argument("-f", "--filter", dest="filter_name", default=None,
+                        help="Filter by user, computer, group, container, OU, domain or GPO name (case insensitive)")
+    parser.add_argument("-a", "--filter-admin", dest="filter_admin", action="store_true",
+                        help="Exclude relationships where destination is AdminCount=true")
+    args = parser.parse_args()
+
+    zip_path = args.zip_path
+    limit = args.limit
+    filter_name = args.filter_name
+    filter_admin = args.filter_admin
 
     if limit != ':' and not limit.isdigit():
-        print("[ERROR] The 'limit' must be an integer.")
+        print("[ERROR] The 'limit' must be an integer or ':'.")
         sys.exit(1)
 
     print("[INFO] Reading data from ZIP...")
@@ -132,15 +160,19 @@ def main():
             obsolete_computers.append(entity)
 
     def print_entities(title, entities):
-        print(f"- {title}: {len(entities)}")
-        if entities:
-            shown = get_display_items(entities, limit)
+        filtered_entities = [e for e in entities if name_matches_filter(
+            e.get("Properties", {}).get("name", ""),
+            e.get("_tipo", ""),
+            filter_name)]
+        print(f"- {title}: {len(filtered_entities)}")
+        if filtered_entities:
+            shown = get_display_items(filtered_entities, limit)
             for u in shown:
                 name = u.get("Properties", {}).get("name", "Unknown")
                 tipo = u.get("_tipo", "Unknown")
                 print(f"   • {name} ({tipo})")
-            if limit != ':' and len(entities) > int(limit):
-                print(f"  ... ({len(entities) - int(limit)} more)")
+            if limit != ':' and len(filtered_entities) > int(limit):
+                print(f"  ... ({len(filtered_entities) - int(limit)} more)")
         else:
             print("   (none)")
 
@@ -153,64 +185,67 @@ def main():
     print_entities("AdminCount=true accounts", admins)
     print(f"- Computers with obsolete OS: {len(obsolete_computers)}")
     if obsolete_computers:
-        shown = get_display_items(obsolete_computers, limit)
-        for u in shown:
-            name = u.get("Properties", {}).get("name", "Unknown")
-            os_name = u.get("Properties", {}).get("operatingsystem", "Unknown OS")
-            print(f"   • {name} - {os_name}")
-        if limit != ':' and len(obsolete_computers) > int(limit):
-            print(f"  ... ({len(obsolete_computers) - int(limit)} more)")
+        filtered_obsolete = [c for c in obsolete_computers if name_matches_filter(
+            c.get("Properties", {}).get("name", ""),
+            c.get("_tipo", ""),
+            filter_name)]
+        if filtered_obsolete:
+            shown = get_display_items(filtered_obsolete, limit)
+            for u in shown:
+                name = u.get("Properties", {}).get("name", "Unknown")
+                os_name = u.get("Properties", {}).get("operatingsystem", "Unknown OS")
+                print(f"   • {name} - {os_name}")
+            if limit != ':' and len(filtered_obsolete) > int(limit):
+                print(f"  ... ({len(filtered_obsolete) - int(limit)} more)")
+        else:
+            print("   (none)")
     else:
         print("   (none)")
     print_entities("Disabled admins", disabled_admins)
     print_entities("Users with passwords that never expire", pwd_never_expire)
 
-    levels = {
-        "critical": [],
-        "high": [],
-        "medium": [],
-        "low": []
-    }
-
-    permission_levels = {
-        "critical": {
-            "AdminTo", "GenericAll", "GenericWrite", "WriteOwner",
-            "WriteDacl", "AddMember", "ForceChangePassword", "AllExtendedRights"
-        },
-        "high": {"MemberOf", "AllowedToDelegate", "AllowedToAct"},
-        "medium": {"HasSession", "Contains"},
-        "low": {"Owns"}
-    }
-
+    # Filter relationships according to filter options
+    filtered_rel = []
     for rel in relaciones:
         right = rel.get("derecho", "")
         dest_sid = rel.get("destino_sid", "")
         dest_entity = sid_map.get(dest_sid)
-        if dest_entity and is_admin(dest_entity):
+        origin_name = rel.get("origen_nombre", "")
+        origin_type = rel.get("origen_tipo", "")
+        dest_name = dest_entity.get("Properties", {}).get("name", "") if dest_entity else dest_sid
+        dest_type = dest_entity.get("_tipo", "") if dest_entity else rel.get("destino_tipo", "")
+
+        # Filter out admins if requested
+        if filter_admin and dest_entity and is_admin(dest_entity):
             continue
 
-        found_level = next((lvl for lvl, perms in permission_levels.items() if right in perms), "low")
-        levels[found_level].append(rel)
+        # Apply name/type filter if provided
+        if filter_name:
+            if not (name_matches_filter(origin_name, origin_type, filter_name) or
+                    name_matches_filter(dest_name, dest_type, filter_name)):
+                continue
 
-    print("\n=== DETECTED RELATIONSHIPS BY LEVEL ===")
-    for level in ["critical", "high", "medium", "low"]:
-        rels_level = levels[level]
-        print(f"\n[+] Level: {level.upper()} ({len(rels_level)} relationships)")
-        if rels_level:
-            shown = get_display_items(rels_level, limit)
-            for rel in shown:
-                origin = f"{rel['origen_nombre']} ({rel['origen_tipo']})"
-                dest_name = rel.get("destino_sid", "Unknown")
-                dest_entity = sid_map.get(rel.get("destino_sid", ""))
-                if dest_entity:
-                    dest_name = dest_entity.get("Properties", {}).get("name", dest_name)
-                    dest_type = dest_entity.get("_tipo", rel.get("destino_tipo", "Unknown"))
-                else:
-                    dest_type = rel.get("destino_tipo", "Unknown")
-                dest = f"{dest_name} ({dest_type})"
-                print(f"  {dest} --[{rel['derecho']}]--> {origin}")
-            if limit != ':' and len(rels_level) > int(limit):
-                print(f"  ... ({len(rels_level) - int(limit)} more relationships)")
+        filtered_rel.append(rel)
+
+    print("\n=== DETECTED RELATIONSHIPS ===")
+    print(f"- Total relationships: {len(filtered_rel)}")
+    if filtered_rel:
+        shown = get_display_items(filtered_rel, limit)
+        for rel in shown:
+            origin = f"{rel['origen_nombre']} ({rel['origen_tipo']})"
+            dest_name = rel.get("destino_sid", "Unknown")
+            dest_entity = sid_map.get(rel.get("destino_sid", ""))
+            if dest_entity:
+                dest_name = dest_entity.get("Properties", {}).get("name", dest_name)
+                dest_type = dest_entity.get("_tipo", rel.get("destino_tipo", "Unknown"))
+            else:
+                dest_type = rel.get("destino_tipo", "Unknown")
+            dest = f"{dest_name} ({dest_type})"
+            print(f"  {dest} --[{rel['derecho']}]--> {origin}")
+        if limit != ':' and len(filtered_rel) > int(limit):
+            print(f"  ... ({len(filtered_rel) - int(limit)} more relationships)")
+    else:
+        print("   (none)")
 
 if __name__ == "__main__":
     main()
