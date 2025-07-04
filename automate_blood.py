@@ -101,7 +101,7 @@ def main():
     parser.add_argument('zip_path', help='Path to BloodHound ZIP file')
     parser.add_argument('limit', nargs='?', default=':', help="Limit number of displayed items per category (integer or ':')")
     parser.add_argument('-f', '--filter', default=None, help='Filter string for users/computers/groups/containers/OUs/domains/GPOs/rights')
-    parser.add_argument('-a', '--filter-admin', action='store_true', help='Exclude relationships where destination entity is admin')
+    parser.add_argument('-a', '--filter-admin', action='store_true', help='Exclude relationships where entity is admin')
     args = parser.parse_args()
 
     zip_path = args.zip_path
