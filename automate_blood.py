@@ -10,19 +10,25 @@ import argparse
 def parse_json(zip_path):
     sid_map = {}
     relaciones = []
+    conteo_por_tipo = {}
 
     with zipfile.ZipFile(zip_path, 'r') as z:
         json_files = [f for f in z.namelist() if f.endswith('.json')]
 
         if not json_files:
             print("[ERROR] No JSON files found in the ZIP.")
-            return sid_map, relaciones
+            return sid_map, relaciones, conteo_por_tipo
 
         for file in json_files:
             with z.open(file) as f:
                 content = json.load(f)
                 objs = content.get("data", [])
-                general_type = content.get("meta", {}).get("type", "Unknown")
+                meta = content.get("meta", {})
+                general_type = meta.get("type", "Unknown").lower()
+                count = meta.get("count", 0)
+
+                # Acumular conteo por tipo desde meta.count
+                conteo_por_tipo[general_type] = conteo_por_tipo.get(general_type, 0) + count
 
                 for obj in objs:
                     sid = obj.get("ObjectIdentifier", None)
@@ -34,7 +40,6 @@ def parse_json(zip_path):
                             for ace in obj["Aces"]:
                                 right = ace.get("RightName", "")
                                 if right in (
-                                if right in (
                                         "AdminTo", "GenericAll", "GenericWrite", "WriteOwner", "WriteDacl", "WriteProperty",
                                         "ReadProperty", "ExtendedRight", "AllExtendedRights", "ForceChangePassword", "ChangePassword",
                                         "ResetPassword", "WriteAccountRestrictions", "AddMember", "MemberOf", "Owns", "Contains",
@@ -43,7 +48,6 @@ def parse_json(zip_path):
                                         "GetChangesAll", "ManageGroup", "ShadowCredential", "UserRights", "Self", "ReadMembers",
                                         "AddMembers", "GenericRead", "GenericExecute", "Write", "Add", "Remove", "SyncLAPSAccount"
                                  ):
-                                ):
                                     origin_name = obj.get("Properties", {}).get("name", "Unknown")
                                     dest_sid = ace.get("PrincipalSID", "Unknown")
                                     dest_type = ace.get("PrincipalType", "Unknown")
@@ -56,7 +60,8 @@ def parse_json(zip_path):
                                         "destino_tipo": dest_type
                                     })
 
-    return sid_map, relaciones
+    return sid_map, relaciones, conteo_por_tipo
+
 
 def is_admin(entity):
     return entity.get("Properties", {}).get("admincount") == True
@@ -119,7 +124,7 @@ def main():
         sys.exit(1)
 
     print("[INFO] Reading data from ZIP...")
-    sid_map, relaciones = parse_json(zip_path)
+    sid_map, relaciones, conteo_por_tipo = parse_json(zip_path)
 
     kerberoastables = []
     asrep_roastables = []
@@ -161,6 +166,10 @@ def main():
 
     print("\n=== DETECTED ENTITIES ===")
     print(f"- Total entities: {len(sid_map)}")
+    print("  Breakdown:")
+    # Mostrar conteo por tipo con formato, usando las keys en el dict:
+    for t in ["users", "computers", "groups", "containers", "ous", "domains", "gpos"]:
+        print(f"   • {t.capitalize()}: {conteo_por_tipo.get(t, 0)}")
 
     print("\n=== POTENTIALLY CRITICAL ASSETS ===")
     print_entities("Kerberoastable accounts", kerberoastables)
