@@ -60,6 +60,7 @@ options:
 - Filtering
 
 ![imagen](https://github.com/user-attachments/assets/315f7877-f934-4b4e-8c28-c9ab8bea6f8c)
+![imagen](https://github.com/user-attachments/assets/31c86d20-7b16-4628-b326-acf57209f083)
 
 
 
