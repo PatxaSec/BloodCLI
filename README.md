@@ -34,11 +34,12 @@ python automate_blood.py <path_to_bloodhound_zip> [limit]
 
 - WITH DEFAULT Full data
 
-![imagen](https://github.com/user-attachments/assets/d4df3c2a-a07b-4f75-9233-b51fd45857fb)
+![imagen](https://github.com/user-attachments/assets/b294e910-005e-49a5-91bd-0e6812aa1a3b)
 
 - WITH 5 RELATIONSHIP
 
-![imagen](https://github.com/user-attachments/assets/02517ebe-4610-4074-831a-69f8b2c77430)
+![imagen](https://github.com/user-attachments/assets/bf32dc4b-f995-45af-b9f6-d0312f1b9097)
+
 
 
 
