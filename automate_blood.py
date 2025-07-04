@@ -123,7 +123,7 @@ def main():
     parser.add_argument("-f", "--filter", dest="filter_name", default=None,
                         help="Filter by user, computer, group, container, OU, domain or GPO name (case insensitive)")
     parser.add_argument("-a", "--filter-admin", dest="filter_admin", action="store_true",
-                        help="Exclude relationships where destination is AdminCount=true")
+                        help="Exclude relationships where entity is admin")
     args = parser.parse_args()
 
     zip_path = args.zip_path
