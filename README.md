@@ -20,8 +20,6 @@ This Python script parses a BloodHound JSON ZIP file and analyzes Active Directo
   - Medium
   - Low
  
-> [!WARNING]  
-> RELATIONSHIPS are limited to full data on default.
 ---
 
 ## Usage
