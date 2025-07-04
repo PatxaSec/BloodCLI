@@ -21,16 +21,16 @@ This Python script parses a BloodHound JSON ZIP file and analyzes Active Directo
   - Low
  
 > [!WARNING]  
-> RELATIONSHIPS ARE LIMITED TO 10 on default.
+> RELATIONSHIPS are limited to full data on default.
 ---
 
 ## Usage
 
-lIMIT CAN BE `':'` FOR FULL DATA. OR ANY INT. 
-
 ```bash
 python automate_blood.py <path_to_bloodhound_zip> [limit]
 ```
+
+- limit can be any integer.
 
 - WITH DEFAULT LIMIT OF 10 RELATIONSHIPS
 
