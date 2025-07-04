@@ -73,11 +73,32 @@ def pwd_never_expires(entity):
 
 def is_old_os(entity):
     props = entity.get("Properties", {})
-    os_name = props.get("operatingsystem", "")
-    if os_name:
-        if any(ver in os_name.lower() for ver in ["xp", "7", "vista", "2003", "2008"]):
-            return True
-    return False
+    os_name = props.get("operatingsystem")
+    
+    if not os_name:
+        return False
+
+    os_name = str(os_name).lower()
+
+    # Listado completo de sistemas operativos considerados deprecated
+    deprecated_keywords = [
+        "windows xp",
+        "windows vista",
+        "windows 7",
+        "windows 8",
+        "windows 8.1",
+        "windows embedded standard",
+        "windows embedded 8",
+        "windows embedded 8.1",
+        "windows server 2003",
+        "windows server 2008",
+        "windows server® 2008",
+        "windows server 2012",
+        "windows server 2012 r2",
+    ]
+
+    return any(keyword in os_name for keyword in deprecated_keywords)
+
 
 def get_display_items(items, limit):
     if limit == ':':
@@ -141,7 +162,17 @@ def main():
     print_entities("Kerberoastable accounts", kerberoastables)
     print_entities("AS-REP Roastable accounts", asrep_roastables)
     print_entities("AdminCount=true accounts", admins)
-    print_entities("Computers with obsolete OS", obsolete_computers)
+    print(f"- Computers with obsolete OS: {len(obsolete_computers)}")
+    if obsolete_computers:
+        shown = get_display_items(obsolete_computers, limit)
+        for u in shown:
+            name = u.get("Properties", {}).get("name", "Unknown")
+            os_name = u.get("Properties", {}).get("operatingsystem", "Unknown OS")
+            print(f"   • {name} - {os_name}")
+        if limit != ':' and len(obsolete_computers) > int(limit):
+            print(f"  ... ({len(obsolete_computers) - int(limit)} more)")
+    else:
+        print("   (none)")
     print_entities("Disabled admins", disabled_admins)
     print_entities("Users with passwords that never expire", pwd_never_expire)
 
