@@ -107,7 +107,7 @@ def get_display_items(items, limit):
         return items[:int(limit)]
 
 def main():
-    parser = argparse.ArgumentParser(description="BloodHound JSON analyzer")
+    parser = argparse.ArgumentParser(description="Process BloodHound ZIP files and analyze relationships.")
     parser.add_argument('zip_path', help='Path to BloodHound ZIP file')
     parser.add_argument('limit', nargs='?', default=':', help="Limit number of displayed items per category (integer or ':')")
     parser.add_argument('-f', '--filter', default=None, help='Filter string for users/computers/groups/containers/OUs/domains/GPOs/rights')
