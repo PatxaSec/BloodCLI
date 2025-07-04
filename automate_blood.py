@@ -104,7 +104,7 @@ def main():
     limit = sys.argv[2] if len(sys.argv) > 2 else ':'
 
     if limit != ':' and not limit.isdigit():
-        print("[ERROR] The 'limit' must be an integer to show all results.")
+        print("[ERROR] The 'limit' must be an integer.")
         sys.exit(1)
 
     print("[INFO] Reading data from ZIP...")
