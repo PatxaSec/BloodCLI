@@ -80,35 +80,20 @@ def is_old_os(entity):
 
     os_name = str(os_name).lower()
 
-    # Listado completo de sistemas operativos considerados deprecated
     deprecated_keywords = [
-        "windows xp",
-        "windows vista",
-        "windows 7",
-        "windows 8",
-        "windows 8.1",
-        "windows embedded standard",
-        "windows embedded 8",
-        "windows embedded 8.1",
-        "windows server 2003",
-        "windows server 2008",
-        "windows server® 2008",
-        "windows server 2012",
-        "windows server 2012 r2",
+        "windows xp", "windows vista", "windows 7", "windows 8", "windows 8.1",
+        "windows embedded standard", "windows embedded 8", "windows embedded 8.1",
+        "windows server 2003", "windows server 2008", "windows server® 2008",
+        "windows server 2012", "windows server 2012 r2"
     ]
 
     return any(keyword in os_name for keyword in deprecated_keywords)
-
 
 def get_display_items(items, limit):
     if limit == ':':
         return items
     else:
-        try:
-            limit_int = int(limit)
-            return items[:limit_int]
-        except:
-            return items[:10]  # Default fallback
+        return items[:int(limit)]
 
 def main():
     if len(sys.argv) < 2:
@@ -116,7 +101,11 @@ def main():
         sys.exit(1)
 
     zip_path = sys.argv[1]
-    limit = sys.argv[2] if len(sys.argv) > 2 else '10'
+    limit = sys.argv[2] if len(sys.argv) > 2 else ':'
+
+    if limit != ':' and not limit.isdigit():
+        print("[ERROR] The 'limit' must be an integer to show all results.")
+        sys.exit(1)
 
     print("[INFO] Reading data from ZIP...")
     sid_map, relaciones = parse_json(zip_path)
@@ -176,7 +165,6 @@ def main():
     print_entities("Disabled admins", disabled_admins)
     print_entities("Users with passwords that never expire", pwd_never_expire)
 
-    # --- Relaciones ---
     levels = {
         "critical": [],
         "high": [],
@@ -197,7 +185,6 @@ def main():
     for rel in relaciones:
         right = rel.get("derecho", "")
         dest_sid = rel.get("destino_sid", "")
-
         dest_entity = sid_map.get(dest_sid)
         if dest_entity and is_admin(dest_entity):
             continue
