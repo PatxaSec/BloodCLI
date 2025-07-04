@@ -32,12 +32,13 @@ python automate_blood.py <path_to_bloodhound_zip> [limit]
 
 - limit can be any integer.
 
-- WITH DEFAULT LIMIT OF 10 RELATIONSHIPS
+- WITH DEFAULT Full data
 
-![imagen](https://github.com/user-attachments/assets/a33d5a4b-ab06-4a3d-891e-1f033eab670e)
+![imagen](https://github.com/user-attachments/assets/d4df3c2a-a07b-4f75-9233-b51fd45857fb)
 
-- WITH FULL DATA RELATIONSHIP
+- WITH 5 RELATIONSHIP
 
-![imagen](https://github.com/user-attachments/assets/45b10fd7-5883-4ac3-becf-96f435216d70)
+![imagen](https://github.com/user-attachments/assets/02517ebe-4610-4074-831a-69f8b2c77430)
+
 
 
