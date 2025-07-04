@@ -34,10 +34,15 @@ def parse_json(zip_path):
                             for ace in obj["Aces"]:
                                 right = ace.get("RightName", "")
                                 if right in (
-                                    "AdminTo", "GenericAll", "GenericWrite", "WriteOwner",
-                                    "WriteDacl", "AddMember", "ForceChangePassword",
-                                    "AllExtendedRights", "MemberOf", "AllowedToDelegate",
-                                    "AllowedToAct", "HasSession", "Contains", "Owns"
+                                if right in (
+                                        "AdminTo", "GenericAll", "GenericWrite", "WriteOwner", "WriteDacl", "WriteProperty",
+                                        "ReadProperty", "ExtendedRight", "AllExtendedRights", "ForceChangePassword", "ChangePassword",
+                                        "ResetPassword", "WriteAccountRestrictions", "AddMember", "MemberOf", "Owns", "Contains",
+                                        "AllowedToDelegate", "AllowedToAct", "HasSession", "CanRDP", "ExecuteDCOM", "AllowedToSync",
+                                        "AddSelf", "RemoveSelf", "ReadLAPSPassword", "ReadGMSAPassword", "DCSync", "GetChanges",
+                                        "GetChangesAll", "ManageGroup", "ShadowCredential", "UserRights", "Self", "ReadMembers",
+                                        "AddMembers", "GenericRead", "GenericExecute", "Write", "Add", "Remove", "SyncLAPSAccount"
+                                 ):
                                 ):
                                     origin_name = obj.get("Properties", {}).get("name", "Unknown")
                                     dest_sid = ace.get("PrincipalSID", "Unknown")
